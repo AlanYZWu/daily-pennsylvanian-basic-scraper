@@ -5,6 +5,7 @@ JSON file that tracks headlines over time.
 
 import os
 import sys
+from datetime import datetime
 
 import daily_event_monitor
 
@@ -27,13 +28,18 @@ def scrape_data_point():
     loguru.logger.info(f"Request URL: {req.url}")
     loguru.logger.info(f"Request status code: {req.status_code}")
 
+    time_stamps = []
     if req.ok:
         soup = bs4.BeautifulSoup(req.text, "html.parser")
-        target_element = soup.find("a", class_="frontpage-link")
-        data_point = "" if target_element is None else target_element.text
-        loguru.logger.info(f"Data point: {data_point}")
-        return data_point
-
+        time_stamps_raw = soup.findall("span", class_="post-time")
+        
+        for stamp in time_stamps_raw:
+            time_text = stamp.get_text().strip()
+            try:
+                dt = datetime.strptime(time_text, "%B %d, %Y at %I:%M %p")
+                time_stamps.append(dt.isoformat())
+            except ValueError as e:
+                loguru.logger.warning(f"Failed to parse '{time_text}': {e}")
 
 if __name__ == "__main__":
 
@@ -57,14 +63,22 @@ if __name__ == "__main__":
     # Run scrape
     loguru.logger.info("Starting scrape")
     try:
-        data_point = scrape_data_point()
+        scraped_timestamps = scrape_data_point()
     except Exception as e:
         loguru.logger.error(f"Failed to scrape data point: {e}")
-        data_point = None
+        scraped_timestamps = []
+
+    # Get existing time stamps
+    scraped = set()
+    for date in dem.data:
+        scraped.update(dem.data[date])
+
+    new_stamps = [ts for ts in scraped_timestamps if ts not in scraped]
 
     # Save data
-    if data_point is not None:
-        dem.add_today(data_point)
+    if new_stamps:
+        for ts in new_stamps:
+            dem.add_today(ts)
         dem.save()
         loguru.logger.info("Saved daily event monitor")
 
