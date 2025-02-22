@@ -28,18 +28,20 @@ def scrape_data_point():
     loguru.logger.info(f"Request URL: {req.url}")
     loguru.logger.info(f"Request status code: {req.status_code}")
 
-    time_stamps = []
+    timestamps = []
     if req.ok:
         soup = bs4.BeautifulSoup(req.text, "html.parser")
-        time_stamps_raw = soup.findall("span", class_="post-time")
+        timestamps_raw = soup.find_all("span", class_="post-time")
         
-        for stamp in time_stamps_raw:
+        for stamp in timestamps_raw:
             time_text = stamp.get_text().strip()
             try:
                 dt = datetime.strptime(time_text, "%B %d, %Y at %I:%M %p")
-                time_stamps.append(dt.isoformat())
+                timestamps.append(dt.isoformat())
             except ValueError as e:
                 loguru.logger.warning(f"Failed to parse '{time_text}': {e}")
+
+    return timestamps
 
 if __name__ == "__main__":
 
@@ -57,7 +59,7 @@ if __name__ == "__main__":
     # Load daily event monitor
     loguru.logger.info("Loading daily event monitor")
     dem = daily_event_monitor.DailyEventMonitor(
-        "data/daily_pennsylvanian_headlines.json"
+        "data/utb_timestamps.json"
     )
 
     # Run scrape
