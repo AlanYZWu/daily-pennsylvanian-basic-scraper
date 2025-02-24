@@ -20,6 +20,10 @@ The workflow defined in `.github/workflows/scrape.yaml` runs on a defined schedu
 4. Run the python script `script.py` to scrape data
 5. Commit any updated data files to the Git repository
 
+## Updates by Alan Wu
+I retooled scrape_data_point to scrape upload times of Under The Button "news" stories. The time upload time stamps are stored in a JSON file as a list. scrape_data_point scrapes every single time stamp on the page, even if they've been scraped before. To make sure duplicates didn't wind up in the JSON file, I checked each scraped time stamp with the ones already stored in the JSON file. 
+
+I also added an additional function called extract_list. The time stamps are stored in the JSON file as a list because it includes the time stamp and the time at which the time stamp was added to the JSON file. Lists are considered unhashable so the time stamp needs to be extracted from the list to be checked against the added time stamps.                                                                                                                                                                                                                  
 ## Scheduling
 
 The workflow schedule is configured with [cron syntax](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#schedule) to run:
