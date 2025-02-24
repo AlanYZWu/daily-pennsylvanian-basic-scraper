@@ -43,6 +43,16 @@ def scrape_data_point():
 
     return timestamps
 
+def extract_list(data):
+    flat = set()
+    for date in data:
+        for item in data[date]:
+            if isinstance(item, list):
+                flat.update(item)
+            else:
+                flat.add(item)
+    return flat
+
 if __name__ == "__main__":
 
     # Setup logger to track runtime
@@ -71,10 +81,9 @@ if __name__ == "__main__":
         scraped_timestamps = []
 
     # Get existing time stamps
-    scraped = set()
-    for date in dem.data:
-        scraped.update(dem.data[date])
+    scraped = extract_list(dem.data)
 
+    # Get new time stamps
     new_stamps = [ts for ts in scraped_timestamps if ts not in scraped]
 
     # Save data
